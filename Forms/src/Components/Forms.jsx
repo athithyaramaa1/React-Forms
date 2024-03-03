@@ -1,5 +1,4 @@
-import { useEffect } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useEffect, useState } from "react";
 import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import CssBaseline from "@mui/material/CssBaseline";
@@ -27,37 +26,90 @@ function Copyright(props) {
   );
 }
 
+
 const defaultTheme = createTheme();
 
 export default function SignUp() {
-  const {
-    handleSubmit,
-    control,
-    setValue,
-    formState: { errors },
-  } = useForm({
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      telephone: "",
-      confirmPassword: "",
-    },
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    telephone: "",
+    password: "",
+    confirmPassword: "",
   });
+
+  const [errors, setErrors] = useState({});
+
+  const validateForm = () => {
+    let isvalid = true;
+    const error = {};
+
+    if (formData.firstName.trim() === "") {
+      error.firstName = "First Name is required";
+      isvalid = false;
+    } else if (formData.firstName.length < 3) {
+      error.firstName = "First Name must be atleast 3 characters";
+      isvalid = false;
+    } else if (formData.firstName.length > 30) {
+      error.firstName = "Name must be less than 30 characters";
+      isvalid = false;
+    }
+
+    if (formData.lastName.trim() == "") {
+      error.lastName = "Last Name is required";
+      isvalid = false;
+    } else if (formData.lastName.length < 3) {
+      error.lastName = "Last Name must be atleast 3 characters";
+      isvalid = false;
+    } else if (formData.lastName.length > 30) {
+      error.lastName = "Name must be less than 30 characters";
+      isvalid = false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim() || !emailRegex.test(formData.email.trim())) {
+      error.email = "Enter a valid email address";
+      isvalid = false;
+    }
+
+    const telephoneRegex = /^\d{10}$/;
+    if (
+      !formData.telephone.trim() ||
+      !telephoneRegex.test(formData.telephone.trim())
+    ) {
+      error.telephone = "Enter a valid 10-digit telephone number";
+      isvalid = false;
+    }
+
+    setErrors(error);
+    return isvalid;
+  };
 
   useEffect(() => {
     const storedFormData = localStorage.getItem("formData");
     if (storedFormData) {
-      const parsedData = JSON.parse(storedFormData);
-      Object.keys(parsedData).forEach((key) => {
-        setValue(key, parsedData[key]);
-      });
+      setFormData(JSON.parse(storedFormData));
     }
-  }, [setValue]);
+  }, []);
 
-  const onSubmit = (data) => {
-    localStorage.setItem("formData", JSON.stringify(data));
-    console.log("Form data submitted:", data);
+  useEffect(() => {
+    localStorage.setItem("formData", JSON.stringify(formData));
+  }, [formData]);
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+
+    if (!validateForm()){
+      console.log("Form is invalid. Please enter the required details as per required constraints");
+    }
+  };
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
 
   return (
@@ -81,105 +133,69 @@ export default function SignUp() {
           <Box
             component="form"
             noValidate
-            onSubmit={handleSubmit(onSubmit)}
+            onSubmit={handleSubmit}
             sx={{ mt: 3 }}
           >
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6}>
-                <Controller
+                <TextField
+                  autoComplete="given-name"
                   name="firstName"
-                  control={control}
-                  rules={{
-                    required: "First Name is required",
-                    minLength: { value: 3, message: "First Name must be at least 3 characters" },
-                    maxLength: { value: 30, message: "Name must be less than 30 characters" },
-                  }}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      autoComplete="given-name"
-                      required
-                      fullWidth
-                      id="firstName"
-                      label="First Name"
-                      autoFocus
-                      type="text"
-                      error={!!errors.firstName}
-                      helperText={errors.firstName?.message}
-                    />
-                  )}
+                  required
+                  fullWidth
+                  id="firstName"
+                  label="First Name"
+                  autoFocus
+                  type="text"
+                  value={formData.firstName}
+                  onChange={handleChange}
+                  error={!!errors.firstName}
+                  helperText={errors.firstName}
                 />
               </Grid>
               <Grid item xs={12} sm={6}>
-                <Controller
+                <TextField
+                  required
+                  fullWidth
+                  id="lastName"
+                  label="Last Name"
                   name="lastName"
-                  control={control}
-                  rules={{
-                    required: "Last Name is required",
-                    minLength: { value: 3, message: "Last Name must be at least 3 characters" },
-                    maxLength: { value: 30, message: "Name must be less than 30 characters" },
-                  }}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      required
-                      fullWidth
-                      id="lastName"
-                      label="Last Name"
-                      autoComplete="family-name"
-                      type="text"
-                      error={!!errors.lastName}
-                      helperText={errors.lastName?.message}
-                    />
-                  )}
+                  autoComplete="family-name"
+                  type="text"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  error={!!errors.lastName}
+                  helperText={errors.lastName}
                 />
               </Grid>
               <Grid item xs={12}>
-                <Controller
+                <TextField
+                  required
+                  fullWidth
+                  id="email"
+                  label="Email Address"
                   name="email"
-                  control={control}
-                  rules={{
-                    required: "Email is required",
-                  }}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      required
-                      fullWidth
-                      id="email"
-                      label="Email Address"
-                      autoComplete="email"
-                      type="email"
-                      error={!!errors.email}
-                      helperText={errors.email?.message}
-                    />
-                  )}
+                  autoComplete="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  error={!!errors.email}
+                  helperText={errors.email}
                 />
               </Grid>
               <Grid item xs={12}>
-                <Controller
+                <TextField
+                  required
+                  fullWidth
+                  id="telephone"
+                  label="Phone number"
                   name="telephone"
-                  control={control}
-                  rules={{
-                    required: "Telephone is required",
-                    pattern: {
-                      value: /^\d{10}$/,
-                      message: "Enter a valid 10-digit telephone number",
-                    },
-                  }}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      required
-                      fullWidth
-                      id="telephone"
-                      label="Phone number"
-                      autoComplete="tel"
-                      type="tel"
-                      error={!!errors.telephone}
-                      helperText={errors.telephone?.message}
-                    />
-                  )}
+                  autoComplete="tel"
+                  type="tel"
+                  value={formData.telephone}
+                  onChange={handleChange}
+                  error={!!errors.telephone}
+                  helperText={errors.telephone}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -191,19 +207,21 @@ export default function SignUp() {
                 />
               </Grid>
             </Grid>
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-            >
-              Sign Up
-            </Button>
+              {" "}
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2 }}
+                onClick={handleSubmit}
+              >
+                Sign Up
+              </Button>{" "}
             <Grid container justifyContent="flex-end">
               <Grid item>
-                <Link variant="body2">
-                  Already have an account? Sign in
-                </Link>
+                  <Link variant="body2">
+                    Already have an account? Sign in
+                  </Link>{" "}
               </Grid>
             </Grid>
           </Box>
